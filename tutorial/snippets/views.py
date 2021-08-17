@@ -13,7 +13,8 @@ from snippets.serializers import SnippetSerializer
 
 # @csrf_exempt # tut1
 @api_view(["GET", "POST"]) # tut2
-def snippet_list(request):
+# def snippet_list(request): # tut1
+def snippet_list(request, format=None): # tut2
     """
     List all code snippets or create a new snippet.
     """
@@ -37,7 +38,8 @@ def snippet_list(request):
 
 # @csrf_exempt # tut1
 @api_view(["GET", "PUT", "DELETE"]) # tut2
-def snippet_detail(request, pk):
+# def snippet_detail(request, pk): # tut1
+def snippet_detail(request, pk, format=None): # tut2
     """
     Retrieve, update or delete a code snippet.
     """
