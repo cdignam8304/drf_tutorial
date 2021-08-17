@@ -35,28 +35,36 @@ def snippet_list(request):
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST) # tut2
 
 
-@csrf_exempt
+# @csrf_exempt # tut1
+@api_view(["GET", "PUT", "DELETE"]) # tut2
 def snippet_detail(request, pk):
     """
     Retrieve, update or delete a code snippet.
     """
     try:
         snippet = Snippet.objects.get(pk=pk)
-    except:
-        return HttpResponse(status=404)
+    # except: # tut1
+        # return HttpResponse(status=404) # tut1
+    except Snippet.DoesNotExist: # tut2
+        return Response(status=status.HTTP_404_NOT_FOUND) # tut2
     
     if request.method == "GET":
         serializer = SnippetSerializer(snippet)
-        return JsonResponse(serializer.data)
+        # return JsonResponse(serializer.data) # tut1
+        return Response(serializer.data) # tut2
     
     elif request.method == "PUT":
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(snippet, data=data)
+        # data = JSONParser().parse(request) # tut1
+        # serializer = SnippetSerializer(snippet, data=data) # tut1
+        serializer = SnippetSerializer(snippet, data=request.data) # tut2
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
+            # return JsonResponse(serializer.data) # tut1
+            return Response(serializer.data) # tut2
+        # return JsonResponse(serializer.errors, status=400) # tut1
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) # tut2
     
     elif request.method == "DELETE":
         snippet.delete()
-        return HttpResponse(status=204)
+        # return HttpResponse(status=204) # tut1
+        return Response(status=status.HTTP_204_NO_CONTENT) # tut2
