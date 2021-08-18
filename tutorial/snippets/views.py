@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
 from rest_framework.views import APIView
+from rest_framework import mixins
+from rest_framework import generics
 
 
 # THIS API WILL SUPPORT VIEWING A LIST OF SNIPPETS OR ADDING A NEW SNIPPET
@@ -79,6 +81,9 @@ def snippet_detail(request, pk, format=None): # tut2
 # CLASS-BASED VIEWS (Tutorial 3+)
 # -------------------------------
 
+# 1. Without Mixins
+# -----------------
+
 class SnippetList(APIView):
     """
     List all snippets, or create a new snippet.
@@ -125,3 +130,54 @@ class SnippetDetail(APIView):
         snippet = self.get_object(pk=pk)
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# 2. With Mixins (simpler code) - PROVIDES FORM IN WEB API VIEW FOR CREATE AND UPDATE
+# -----------------------------------------------------------------------------------
+
+class SnippetList_Mx(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    generics.GenericAPIView): # GenericAPIView provides core functionality
+
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs) # bind get request to the ListModelMixin
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs) # bind post request to the CreateModelMixin
+
+
+class SnippetDetail_Mx(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    generics.GenericAPIView): # GenericAPIView provides core functionality
+
+    queryset = Snippet.objects.all() # suprising! Is this pulling all instances from database?
+    serializer_class = SnippetSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+# 3. Generic Class Based Views (even simpler code!)
+# -------------------------------------------------
+
+class SnippetList_GCBV(generics.ListCreateAPIView):
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+
+
+class SnippetDetail_GCBV(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+
