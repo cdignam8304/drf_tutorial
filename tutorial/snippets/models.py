@@ -1,6 +1,9 @@
 from django.db import models
 from pygments.lexers import get_all_lexers
 from pygments.styles import get_all_styles
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters.html import HtmlFormatter
+from pygments import highlight
 
 
 
@@ -17,6 +20,33 @@ class Snippet(models.Model):
     linenos = models.BooleanField(default=False)
     language = models.CharField(choices=LANGUAGE_CHOICES, default="python", max_length=100)
     style = models.CharField(choices=STYLE_CHOICES, default="friendly", max_length=100)
+    
+    # "auth.User" is the related model
+    # related name is the name to use to get from the User instance back to Snippets, i.e. to
+    # allow us to get a list of snippets related to a given user.
+    # models.CASCADE means that if user is deleted then all related snippets will be also deleted.
+    owner = models.ForeignKey("auth.User", related_name="snippets", on_delete=models.CASCADE) # tut4
+    # In this field we will store the code-highlighted version of the snippet.
+    highlighted = models.TextField() # tut4
 
     class Meta:
         ordering = ["created"]
+    
+    # We override the default save method to ensure the new "highlighted" field gets populated
+    # automatically when the snippet instance is saved.
+    def save(self, *args, **kwargs): # tut4
+        """
+        Use the 'pygments' library to create a highlighted HTML
+        representation of the code snippet.
+        """
+        lexer = get_lexer_by_name(self.language)
+        linenos = "table" if self.linenos else False
+        options = {"title": self.title} if self.title else {}
+        formatter = HtmlFormatter(
+            style=self.style,
+            linenos=linenos,
+            full=True,
+            **options
+        )
+        self.highlighted = highlight(self.code, lexer, formatter)
+        super(Snippet, self).save(*args, **kwargs)

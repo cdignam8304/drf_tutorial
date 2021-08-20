@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from django.contrib.auth.models import User
 
 
 # Long-form implementation of SnippetSerializer
@@ -37,5 +38,12 @@ class SnippetSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "code", "linenos", "language", "style"]
         
 
+# Serializer to view users and the snippets they created
+class UserSerializer(serializers.ModelSerializer):
+    snippets = serializers.PrimaryKeyRelatedField(many=True, query=Snippet.objects.all())
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "snippets"]
 
 
