@@ -1,5 +1,5 @@
 from snippets.views import snippet_list
-from django.urls import path
+from django.urls import path, include
 from snippets import views
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -20,3 +20,9 @@ urlpatterns = [
 # Allows a url to contain a suffix like .json or .api to specify the response type for a GET request or
 # to specify data format being sent on a POST/PUT/DELETE request.
 urlpatterns = format_suffix_patterns(urlpatterns) # tut2
+
+# tut4
+# include login and logout views for the browsable API
+urlpatterns += [
+   path("api-auth/", include("rest_framework.urls")),
+]

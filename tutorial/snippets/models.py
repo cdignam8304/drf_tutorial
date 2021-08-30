@@ -25,6 +25,7 @@ class Snippet(models.Model):
     # related name is the name to use to get from the User instance back to Snippets, i.e. to
     # allow us to get a list of snippets related to a given user.
     # models.CASCADE means that if user is deleted then all related snippets will be also deleted.
+    # https://stackoverflow.com/questions/38388423/what-does-on-delete-do-on-django-models
     owner = models.ForeignKey("auth.User", related_name="snippets", on_delete=models.CASCADE) # tut4
     # In this field we will store the code-highlighted version of the snippet.
     highlighted = models.TextField() # tut4
