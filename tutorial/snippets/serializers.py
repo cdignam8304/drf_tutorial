@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from django.contrib.auth.models import User
 
 
 # Long-form implementation of SnippetSerializer
@@ -32,10 +33,20 @@ from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 
 # Re-implement SnippetSerializer inheriting from ModelSerializer
 class SnippetSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.username") # tut4
+
     class Meta:
         model = Snippet
-        fields = ["id", "title", "code", "linenos", "language", "style"]
+        fields = ["id", "title", "code", "linenos", "language", "style", "owner"] # add "owner" in #tut4
         
 
+# Serializer to view users and the snippets they created
+class UserSerializer(serializers.ModelSerializer):
+    # snippets = serializers.PrimaryKeyRelatedField(many=True, query=Snippet.objects.all())
+    snippets = serializers.PrimaryKeyRelatedField(many=True, queryset=Snippet.objects.all()) # query --> queryset in newer version of DRF: https://stackoverflow.com/questions/27484344/assertion-error-at-django-rest-framework
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "snippets"]
 
 

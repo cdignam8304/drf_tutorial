@@ -1,15 +1,18 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 from rest_framework.parsers import JSONParser
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from snippets.models import Snippet
-from snippets.serializers import SnippetSerializer
+from snippets.serializers import SnippetSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework import mixins
 from rest_framework import generics
+from rest_framework import permissions
+from snippets.permissions import IsOwnerOrReadOnly # tut4
 
 
 # THIS API WILL SUPPORT VIEWING A LIST OF SNIPPETS OR ADDING A NEW SNIPPET
@@ -175,9 +178,29 @@ class SnippetDetail_Mx(
 class SnippetList_GCBV(generics.ListCreateAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly] # tut4
+
+    # tut4
+    # We are overriding the perform_create method in order to capture the username that is
+    # performing request, which we use as the owner of the snippet.
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class SnippetDetail_GCBV(generics.RetrieveUpdateDestroyAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly, # only snippet owner should be allowed to edit it.
+        ] # tut4
 
+
+class UserList(generics.ListAPIView): # this provides a read-only list
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView): # this provides a read-only view of single user
+    querset = User.objects.all()
+    serializer_class = UserSerializer
