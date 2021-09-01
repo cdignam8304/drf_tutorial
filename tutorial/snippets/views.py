@@ -6,13 +6,16 @@ from rest_framework.parsers import JSONParser
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework import renderers
 from snippets.permissions import IsOwnerOrReadOnly # tut4
+
 
 
 # THIS API WILL SUPPORT VIEWING A LIST OF SNIPPETS OR ADDING A NEW SNIPPET
@@ -202,5 +205,31 @@ class UserList(generics.ListAPIView): # this provides a read-only list
 
 
 class UserDetail(generics.RetrieveAPIView): # this provides a read-only view of single user
-    querset = User.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+
+# CREATING AN ENDPOINT FOR THE ROOT OF THE API (Tutorial 5)
+# ---------------------------------------------------------
+
+@api_view(["GET"])
+def api_root(request, format=None):
+    return Response({
+        "users": reverse("user-list", request=request, format=format),
+        "snippets": reverse("snippet-list", request=request, format=format),
+    })
+
+
+# CREATING AN ENDPOINT FOR THE HIGHLIGHTED SNIPPETS (Tutorial 5)
+# --------------------------------------------------------------
+
+class SnippetHighlight(generics.GenericAPIView):
+    queryset = Snippet.objects.all()
+    renderer_classes = [renderers.StaticHTMLRenderer] # we use this renderer as the content is pre-formatted html code
+
+    # We are not returning a model instance in this view. We are returning the property of an instance ("highlighted").
+    # Therefore, we need to create a custom get method...
+    def get(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
