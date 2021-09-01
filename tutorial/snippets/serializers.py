@@ -32,21 +32,46 @@ from django.contrib.auth.models import User
 
 
 # Re-implement SnippetSerializer inheriting from ModelSerializer
-class SnippetSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username") # tut4
+# class SnippetSerializer(serializers.ModelSerializer):
+#     owner = serializers.ReadOnlyField(source="owner.username") # tut4
+
+#     class Meta:
+#         model = Snippet
+#         fields = ["id", "title", "code", "linenos", "language", "style", "owner"] # add "owner" in #tut4
+
+
+
+# Serializer to view users and the snippets they created
+# class UserSerializer(serializers.ModelSerializer):
+#     # snippets = serializers.PrimaryKeyRelatedField(many=True, query=Snippet.objects.all())
+#     snippets = serializers.PrimaryKeyRelatedField(many=True, queryset=Snippet.objects.all()) # query --> queryset in newer version of DRF: https://stackoverflow.com/questions/27484344/assertion-error-at-django-rest-framework
+
+#     class Meta:
+#         model = User
+#         fields = ["id", "username", "snippets"]
+
+
+
+# tut5
+# RE-IMPLEMENT SERIALIZERS USING HYPERLINKING (rather than foreign keys as we did previously)
+# -------------------------------------------------------------------------------------------
+
+# Our snippet and user serializers include 'url' fields that by default will refer to '{model_name}-detail', 
+# which in this case will be 'snippet-detail' and 'user-detail'
+
+
+class SnippetSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.username")
+    highlight = serializers.HyperlinkedIdentityField(view_name="snippet-highlight", format="html")
 
     class Meta:
         model = Snippet
-        fields = ["id", "title", "code", "linenos", "language", "style", "owner"] # add "owner" in #tut4
-        
+        fields = ["url", "id", "highlight", "owner", "title", "code", "linenos", "language", "style"]
 
-# Serializer to view users and the snippets they created
-class UserSerializer(serializers.ModelSerializer):
-    # snippets = serializers.PrimaryKeyRelatedField(many=True, query=Snippet.objects.all())
-    snippets = serializers.PrimaryKeyRelatedField(many=True, queryset=Snippet.objects.all()) # query --> queryset in newer version of DRF: https://stackoverflow.com/questions/27484344/assertion-error-at-django-rest-framework
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    snippets = serializers.HyperlinkedRelatedField(many=True, view_name="snippet-detail", read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "snippets"]
-
-
+        fields = ["url", "id", "username", "snippets"]
